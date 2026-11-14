@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>내신 계산기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f9;--surface:#fff;--ink:#1c2740;--sub:#64708a;--line:#d9deea;--accent:#ffe14d;--accent-ink:#1c2740;--bad:#c4362c;--field:#f3f5f9;--sel:#e8ecf6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#121826;--surface:#1b2336;--ink:#eef1f8;--sub:#98a3bd;--line:#2d3752;--bad:#ff8a80;--field:#121826;--sel:#273250}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.5}
+h1{font-size:24px;font-weight:900;margin:0 0 4px;letter-spacing:-.02em}
+h2{font-size:15px;font-weight:700;margin:0 0 10px}
+.lead{color:var(--sub);margin:0 0 20px;font-size:13px}
+.app{display:grid;grid-template-columns:312px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:16px;margin:16px 0 16px 16px;height:calc(100vh - 32px);display:flex;flex-direction:column;padding:22px 14px 14px;background:var(--surface);border:1px solid var(--line);border-radius:28px;box-shadow:0 8px 30px rgba(20,30,60,.08)}
+.sidehead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sidehead h2{margin:0}
+.subjects{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;min-height:0}
+.sjrow{position:relative}
+.sj{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:16px;padding:10px 40px 10px 12px;cursor:pointer}
+.sj:hover{background:var(--sel)}
+.more{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--sub);cursor:pointer;display:grid;place-items:center}
+.more:hover,.more[aria-expanded="true"]{background:var(--line);color:var(--ink)}
+.rename{padding:4px 8px;font-size:15px;font-weight:700;border-radius:8px;margin-bottom:2px}
+.pop{position:fixed;z-index:60;min-width:150px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(10,15,30,.18)}
+.pop button{display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);font:inherit;font-size:14px;padding:9px 12px;border-radius:9px;cursor:pointer}
+.pop button:hover{background:var(--sel)}
+.pop .danger{color:var(--bad)}
+.icon{display:grid;place-items:center;padding:0}
+dialog{border:1px solid var(--line);border-radius:24px;padding:0;background:var(--surface);color:var(--ink);width:min(92vw,440px);max-height:86vh;box-shadow:0 20px 60px rgba(10,15,30,.3)}
+dialog::backdrop{background:rgba(10,15,30,.45)}
+.dlg{padding:18px 22px 24px;overflow:auto;max-height:86vh}
+.dhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.dhead h2{margin:0;font-size:18px}
+.dlg h3{font-size:14px;margin:18px 0 6px}
+.dlg p,.dlg li{font-size:14px;margin:0 0 4px}
+.dlg ol{padding-left:20px;margin:0}
+.dlg a{display:block;color:var(--ink);font-weight:500;padding:6px 0;word-break:break-all}
+.sj b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sj span{font-size:12px;color:var(--sub)}
+.sj[aria-current="true"]{background:var(--sel);border-color:var(--line)}
+.account{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.account .row{flex-wrap:nowrap}
+.avatar{flex:none;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-size:14px}
+.uname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+main{padding:28px 32px 56px;max-width:1040px;width:100%}
+.head{display:flex;gap:12px;align-items:center;margin-bottom:20px}
+.title{flex:1;min-width:0;font-size:28px;font-weight:900;letter-spacing:-.02em;background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0;padding:4px 0}
+.title:hover,.title:focus{border-bottom-color:var(--line)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+.right{position:sticky;top:24px}
+section{margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--sub);padding:7px 14px;font:inherit;font-size:14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface);font-weight:700}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+input{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-variant-numeric:tabular-nums}
+input:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.icon{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:20px;line-height:1;cursor:pointer}
+.card .icon{margin-left:auto;color:var(--sub)}
+.add{width:100%;padding:12px;border:1.5px dashed var(--sub);background:transparent;color:var(--ink);border-radius:14px;font:inherit;font-weight:500;cursor:pointer}
+.err{color:var(--bad);font-size:12px;margin-top:6px}
+.sum{color:var(--sub);font-size:13px;margin:6px 2px}
+.result{background:var(--accent);color:var(--accent-ink);border-radius:18px;padding:22px}
+.result .big{font-size:52px;font-weight:900;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
+.result .big small{font-size:20px;font-weight:700;margin-left:4px}
+.result p{margin:8px 0 0;font-size:14px}
+.btn{border:0;background:var(--ink);color:var(--surface);border-radius:10px;padding:9px 14px;font:inherit;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500;font-size:13px;padding:6px 12px}
+.topbar,.backdrop{display:none}
+@media (max-width:900px){
+  .app{display:block}
+  .topbar{display:flex;align-items:center;gap:6px;position:sticky;top:0;z-index:20;background:var(--bg);padding:8px 10px;border-bottom:1px solid var(--line)}
+  .topbar strong{font-size:17px;font-weight:900;letter-spacing:-.02em}
+  .menu{width:42px;height:42px;display:grid;place-items:center;border:0;background:transparent;color:var(--ink);border-radius:12px;cursor:pointer}
+  .menu:active{background:var(--sel)}
+  .side{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin:0;z-index:40;width:min(86vw,320px);height:auto;padding:20px 14px 14px;border-radius:28px;transform:translateX(-110%);visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s}
+  .nav-open .side{transform:none;visibility:visible;transition:transform .25s ease,visibility 0s}
+  .backdrop{display:block;position:fixed;inset:0;z-index:30;background:rgba(10,15,30,.45);opacity:0;pointer-events:none;transition:opacity .25s ease}
+  .nav-open .backdrop{opacity:1;pointer-events:auto}
+  .nav-open{overflow:hidden}
+  main{padding:16px 16px 48px}
+  .grid{display:block}
+  .right{position:static}
+  .title{font-size:24px}
+}
+@media (prefers-reduced-motion:reduce){.side,.backdrop{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="menu" id="menuBtn" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="side">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h16M3 11h16M3 16h10"/></svg>
+  </button>
+  <strong>내신 계산기</strong>
+</div>
+<div class="backdrop" id="backdrop"></div>
+<div class="app">
+  <aside class="side" id="side">
+    <h1>내신 계산기</h1>
+    <p class="lead">지금까지의 성적으로 목표 점수에 필요한 마지막 시험 점수를 계산해요.</p>
+    <div class="sidehead"><h2>과목</h2><button class="icon" id="addSubj" type="button" aria-label="과목 추가">+</button></div>
+    <div class="subjects" id="subjects"></div>
+    <div class="account">
+      <p class="sum" id="storeNote"></p>
+      <div class="row">
+        <div class="row" id="auth" style="flex:1;min-width:0"></div>
+        <button class="icon" id="infoBtn" type="button" aria-label="사용 방법과 정보"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="9" r="7.5"/><path d="M9 8.2v4.6M9 5.4v.1" stroke-linecap="round" stroke-width="1.8"/></svg></button>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="head">
+      <input class="title" id="subjName" type="text" placeholder="과목명" maxlength="20" aria-label="과목명">
+    </div>
+    <div class="grid">
+      <div>
+        <section>
+          <h2>지금까지 본 시험</h2>
+          <div id="cards"></div>
+          <button class="add" id="addBtn" type="button">+ 시험 추가</button>
+          <div class="sum" id="sum"></div>
+        </section>
+        <section>
+          <h2>목표 점수</h2>
+          <div class="card"><label for="target">100점 만점 기준</label><input id="target" type="number" inputmode="decimal" min="0" max="100"></div>
+        </section>
+        <section>
+          <h2>남은 마지막 시험</h2>
+          <div class="card">
+            <div class="seg" id="lastType">
+              <button type="button" data-t="exam">정기고사</button>
+              <button type="button" data-t="perf">수행평가</button>
+            </div>
+            <div style="margin-top:12px"><label for="lastW" id="lastWLabel">반영 비율 (%)</label><input id="lastW" type="number" inputmode="decimal" min="0"></div>
+          </div>
+        </section>
+      </div>
+      <div class="right"><div class="result" id="result" aria-live="polite"></div></div>
+    </div>
+  </main>
+</div>
+
+<dialog id="info" aria-labelledby="infoTitle">
+  <div class="dlg">
+    <div class="dhead"><h2 id="infoTitle">내신 계산기 안내</h2><button class="icon" id="infoClose" type="button" aria-label="닫기">×</button></div>
+    <h3>이 사이트는</h3>
+    <p>지금까지의 시험 성적으로, 목표 점수를 채우려면 마지막 시험에서 몇 점이 필요한지 계산해 줘요. 과목별로 따로 저장돼요.</p>
+    <h3>사용 방법</h3>
+    <ol>
+      <li>사이드바의 + 로 과목을 추가해요. 과목 오른쪽 ⋮ 메뉴에서 이름을 바꾸거나 삭제할 수 있어요.</li>
+      <li>지금까지 본 시험을 카드로 추가해요. 정기고사는 100점 만점 점수와 반영 비율, 수행평가는 점수와 만점을 입력해요.</li>
+      <li>목표 점수를 입력해요. 기본값은 90점이에요.</li>
+      <li>남은 마지막 시험의 종류를 고르면 필요한 점수가 노란 카드에 표시돼요. 반영 비율은 남은 비율로 자동 채워져요.</li>
+      <li>입력한 내용은 자동으로 저장돼요. Google로 로그인하면 다른 기기에서도 볼 수 있어요.</li>
+    </ol>
+    <div id="aboutBox"><h3>만든 사람</h3><div id="aboutLinks"></div></div>
+  </div>
+</dialog>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+// Firebase 콘솔의 웹 앱 설정 값으로 바꿔 넣어 주세요.
+const firebaseConfig = {
+    apiKey: "AIzaSyCMf7Z0tfztyKaH7BXaOkBCoHaoueyWHQo",
+    authDomain: "naeshin-calculator.firebaseapp.com",
+    projectId: "naeshin-calculator",
+    storageBucket: "naeshin-calculator.firebasestorage.app",
+    messagingSenderId: "39624165037",
+    appId: "1:39624165037:web:81027fbdfee11bef172824",
+    measurementId: "G-2BWRSP7P9R"
+  };
+
+// 정보창(i 버튼)에 보일 연락처입니다. 비워 두면 해당 항목은 숨겨져요.
+const ABOUT = {
+  github: "https://github.com/stophoon2012-sys",   // 예: "https://github.com/내아이디"
+  email: "dslr0700@gmail.com"     // 예: "me@example.com"
+};
+
+const $ = id => document.getElementById(id);
+const num = v => (v === "" || v == null || isNaN(+v)) ? null : +v;
+const fmt = n => (Math.round(n * 100) / 100).toString();
+const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const mkCard = () => ({ id: rid(), type: "exam", score: "", w: "" });
+const mkSubject = () => ({ id: rid(), name: "새 과목", target: "90", cards: [mkCard()], last: { type: "exam", w: "", edited: false } });
+const norm = s => ({
+  id: s.id || rid(), name: s.name || "새 과목", target: String(s.target ?? "90"),
+  cards: (s.cards && s.cards.length ? s.cards : [mkCard()]).map(c => ({ id: c.id || rid(), type: c.type === "perf" ? "perf" : "exam", score: c.score ?? "", w: c.w ?? "" })),
+  last: { type: s.last?.type === "perf" ? "perf" : "exam", w: s.last?.w ?? "", edited: !!s.last?.edited }
+});
+
+let subjects = [], curId = null, user = null, db = null, auth = null, timer = null;
+const configured = !firebaseConfig.apiKey.startsWith("YOUR_");
+const cur = () => subjects.find(s => s.id === curId);
+const setNote = t => { $("storeNote").textContent = t; };
+
+/* ---------- 계산 ---------- */
+function calc(sub){
+  let got = 0, used = 0; const errs = new Map();
+  sub.cards.forEach(c => {
+    const s = num(c.score), w = num(c.w);
+    if (s != null && s < 0) errs.set(c.id, "점수는 0 이상이어야 해요.");
+    else if (c.type === "exam" && s != null && s > 100) errs.set(c.id, "정기고사 점수는 100점을 넘을 수 없어요.");
+    else if (c.type === "perf" && s != null && w != null && s > w) errs.set(c.id, "점수가 만점보다 커요.");
+    if (s != null && w != null) { got += c.type === "exam" ? s * w / 100 : s; used += w; }
+  });
+  const target = num(sub.target);
+  const w = sub.last.edited ? num(sub.last.w) : (used < 100 ? 100 - used : null);
+  const r = { got, used, errs, target, w, kind: "empty" };
+  if (errs.size) { r.kind = "invalid"; return r; }
+  if (target == null) { r.kind = "notarget"; return r; }
+  if (w == null || w <= 0) { r.kind = "noweight"; return r; }
+  const need = target - got;
+  if (sub.last.type === "exam") { r.req = need * 100 / w; r.max = 100; } else { r.req = need; r.max = w; }
+  r.kind = need <= 0 ? "done" : r.req > r.max ? "impossible" : "ok";
+  return r;
+}
+const up = n => fmt(Math.ceil(n * 100) / 100);
+
+function resultHTML(sub, r){
+  const exam = sub.last.type === "exam";
+  switch (r.kind) {
+    case "invalid": return `<p>입력한 점수를 먼저 확인해 주세요.</p>`;
+    case "notarget": return `<p>목표 점수를 입력해 주세요.</p>`;
+    case "noweight": return `<p>${exam ? "마지막 시험의 반영 비율" : "마지막 수행평가의 만점"}을 입력해 주세요.</p>`;
+    case "done": return `<div class="big">0<small>점 이상</small></div><p>이미 목표 점수를 달성했어요.</p>`;
+    case "impossible": return `<div class="big">${up(r.req)}<small>점 필요</small></div><p>${exam ? "100점 만점" : fmt(r.max) + "점 만점"}이라 목표 달성이 어려워요. 마지막 시험을 만점 받아도 ${fmt(r.got + (exam ? r.w : r.max))}점이에요.</p>`;
+    default: return `<div class="big">${up(r.req)}<small>점 이상</small></div><p>${exam ? `정기고사(반영 ${fmt(r.w)}%) 100점 만점 기준` : `수행평가 ${fmt(r.max)}점 만점 기준`}으로 이 점수를 받으면 ${fmt(r.target)}점을 채울 수 있어요.</p>`;
+  }
+}
+
+/* ---------- 렌더링 ---------- */
+let renamingId = null, popFor = null;
+function renderSide(){
+  const box = $("subjects"); box.innerHTML = "";
+  subjects.forEach(s => {
+    const r = calc(s), renaming = s.id === renamingId;
+    const row = document.createElement("div"); row.className = "sjrow";
+    const main = document.createElement(renaming ? "div" : "button");
+    if (!renaming) main.type = "button";
+    main.className = "sj";
+    if (s.id === curId) main.setAttribute("aria-current", "true");
+    const st = document.createElement("span");
+    st.textContent = r.kind === "ok" ? `${up(r.req)}점 이상` : r.kind === "done" ? "달성 완료" : r.kind === "impossible" ? "달성 어려움" : "입력 중";
+    if (renaming) {
+      const inp = document.createElement("input");
+      inp.className = "rename"; inp.value = s.name; inp.maxLength = 20; inp.setAttribute("aria-label", "과목 이름");
+      let done = false;
+      const finish = ok => { if (done) return; done = true; commitRename(s.id, ok ? inp.value : null); };
+      inp.onkeydown = e => { if (e.key === "Enter") finish(true); else if (e.key === "Escape") finish(false); };
+      inp.onblur = () => finish(true);
+      main.append(inp, st);
+    } else {
+      const n = document.createElement("b"); n.textContent = s.name || "이름 없음";
+      main.append(n, st);
+      main.onclick = () => { curId = s.id; renderMain(); renderSide(); persist(); setNav(false); };
+    }
+    row.append(main);
+    if (!renaming) {
+      const more = document.createElement("button");
+      more.type = "button"; more.className = "more";
+      more.setAttribute("aria-label", `${s.name || "이름 없음"} 메뉴`);
+      more.setAttribute("aria-haspopup", "menu");
+      more.setAttribute("aria-expanded", String(popFor === s.id));
+      more.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><circle cx="9" cy="3.5" r="1.6"/><circle cx="9" cy="9" r="1.6"/><circle cx="9" cy="14.5" r="1.6"/></svg>';
+      more.onclick = e => { e.stopPropagation(); popFor === s.id ? closePop() : openPop(s.id, more); };
+      row.append(more);
+    }
+    box.appendChild(row);
+  });
+  if (renamingId) setTimeout(() => { const i = box.querySelector(".rename"); if (i) { i.focus(); i.select(); } });
+}
+
+function commitRename(id, val){
+  renamingId = null;
+  const s = subjects.find(x => x.id === id);
+  if (s && val != null && val.trim()) { s.name = val.trim(); if (id === curId) $("subjName").value = s.name; persist(); }
+  renderSide();
+}
+
+function deleteSubject(id){
+  const s = subjects.find(x => x.id === id); if (!s) return;
+  if (!confirm(`“${s.name || "이름 없음"}” 과목을 삭제할까요?`)) return;
+  subjects = subjects.filter(x => x.id !== id);
+  if (!subjects.length) subjects = [mkSubject()];
+  if (!subjects.some(x => x.id === curId)) curId = subjects[0].id;
+  renderMain(); renderSide(); persist();
+}
+
+function closePop(){
+  const p = $("pop"); if (p) p.remove();
+  popFor = null;
+  document.querySelectorAll(".more[aria-expanded=true]").forEach(b => b.setAttribute("aria-expanded", "false"));
+}
+function openPop(id, anchor){
+  closePop(); popFor = id; anchor.setAttribute("aria-expanded", "true");
+  const p = document.createElement("div"); p.id = "pop"; p.className = "pop"; p.setAttribute("role", "menu");
+  const mk = (label, cls, fn) => {
+    const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem");
+    b.textContent = label; if (cls) b.className = cls;
+    b.onclick = () => { closePop(); fn(); };
+    return b;
+  };
+  p.append(mk("이름 바꾸기", "", () => { renamingId = id; renderSide(); }), mk("삭제", "danger", () => deleteSubject(id)));
+  document.body.appendChild(p);
+  const r = anchor.getBoundingClientRect(), w = p.offsetWidth, h = p.offsetHeight;
+  const left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8));
+  let top = r.bottom + 6; if (top + h > innerHeight - 8) top = Math.max(8, r.top - h - 6);
+  p.style.left = left + "px"; p.style.top = top + "px";
+  p.querySelector("button").focus();
+}
+
+function openInfo(){
+  const box = $("aboutLinks"); box.innerHTML = "";
+  if (ABOUT.github) {
+    const a = document.createElement("a");
+    a.href = ABOUT.github; a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.textContent = "GitHub · " + ABOUT.github.replace(/^https?:\/\//, "");
+    box.append(a);
+  }
+  if (ABOUT.email) {
+    const a = document.createElement("a");
+    a.href = "mailto:" + ABOUT.email; a.textContent = "이메일 · " + ABOUT.email;
+    box.append(a);
+  }
+  $("aboutBox").hidden = !box.children.length;
+  $("info").showModal();
+}
+
+function renderCards(){
+  const sub = cur(), box = $("cards"); box.innerHTML = "";
+  sub.cards.forEach((c, i) => {
+    const el = document.createElement("div"); el.className = "card";
+    el.innerHTML = `
+      <div class="row">
+        <div class="seg">
+          <button type="button" data-t="exam" aria-pressed="${c.type === "exam"}">정기고사</button>
+          <button type="button" data-t="perf" aria-pressed="${c.type === "perf"}">수행평가</button>
+        </div>
+        <button type="button" class="icon" aria-label="시험 ${i + 1} 삭제">−</button>
+      </div>
+      <div class="fields">
+        <div><label>점수${c.type === "exam" ? " (100점 만점)" : ""}</label><input data-k="score" type="number" inputmode="decimal" min="0" value="${c.score}"></div>
+        <div><label>${c.type === "exam" ? "반영 비율 (%)" : "만점"}</label><input data-k="w" type="number" inputmode="decimal" min="0" value="${c.w}"></div>
+      </div>
+      <div class="err" hidden></div>`;
+    el.querySelectorAll(".seg button").forEach(b => b.onclick = () => { c.type = b.dataset.t; renderCards(); update(); });
+    el.querySelector(".icon").onclick = () => { sub.cards = sub.cards.filter(x => x.id !== c.id); renderCards(); update(); };
+    el.querySelectorAll("input").forEach(inp => inp.oninput = () => { c[inp.dataset.k] = inp.value; update(); });
+    box.appendChild(el);
+  });
+}
+
+function renderMain(){
+  const sub = cur();
+  $("subjName").value = sub.name;
+  $("target").value = sub.target;
+  $("lastW").value = sub.last.w;
+  renderCards();
+  update(false);
+}
+
+function update(save = true){
+  const sub = cur(), r = calc(sub);
+  [...$("cards").children].forEach((el, i) => {
+    const e = el.querySelector(".err"), msg = r.errs.get(sub.cards[i].id);
+    e.hidden = !msg; e.textContent = msg || "";
+  });
+  const exam = sub.last.type === "exam";
+  $("lastType").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.t === sub.last.type)));
+  $("lastWLabel").textContent = exam ? "반영 비율 (%)" : "만점";
+  if (!sub.last.edited) $("lastW").value = r.w != null ? fmt(r.w) : "";
+  $("sum").textContent = `현재 획득 ${fmt(r.got)}점 · 반영된 비율 ${fmt(r.used)}점 분량`;
+  $("result").innerHTML = resultHTML(sub, r);
+  renderSide();
+  if (save) persist();
+}
+
+/* ---------- 저장 ---------- */
+function persist(){ clearTimeout(timer); timer = setTimeout(doSave, 500); }
+async function doSave(){
+  const data = JSON.parse(JSON.stringify({ subjects, curId }));
+  if (user && db) {
+    try { await setDoc(doc(db, "users", user.uid), data); }
+    catch (e) { setNote("저장하지 못했어요. 로그인 상태와 네트워크를 확인해 주세요."); }
+  } else { try { localStorage.setItem("naesin-v2", JSON.stringify(data)); } catch (e) {} }
+}
+function localLoad(){
+  try { return JSON.parse(localStorage.getItem("naesin-v2") || localStorage.getItem("naesin-subjects") || "null"); } catch (e) { return null; }
+}
+function applyData(d){
+  subjects = ((d && d.subjects) || []).map(norm);
+  if (!subjects.length) subjects = [mkSubject()];
+  curId = subjects.some(s => s.id === (d && d.curId)) ? d.curId : subjects[0].id;
+  renderMain();
+}
+
+function renderAuth(){
+  const box = $("auth"); box.innerHTML = "";
+  if (!configured) return;
+  if (user) {
+    const av = document.createElement("div"); av.className = "avatar";
+    av.textContent = (user.displayName || user.email || "?").trim().charAt(0).toUpperCase();
+    const nm = document.createElement("div"); nm.className = "uname"; nm.textContent = user.displayName || user.email;
+    const out = document.createElement("button"); out.type = "button"; out.className = "btn ghost"; out.textContent = "로그아웃";
+    out.onclick = () => signOut(auth);
+    box.append(av, nm, out);
+  } else {
+    const inn = document.createElement("button"); inn.type = "button"; inn.className = "btn"; inn.textContent = "Google로 로그인";
+    inn.style.flex = "1";
+    inn.onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).catch(() => setNote("로그인하지 못했어요. 팝업 차단을 풀고 다시 시도해 주세요."));
+    box.append(inn);
+  }
+}
+
+async function initStore(){
+  applyData(localLoad());
+  if (!configured) { setNote("Firebase 설정 전이라 이 브라우저에만 저장돼요."); return; }
+  const app = initializeApp(firebaseConfig);
+  auth = getAuth(app); db = getFirestore(app);
+  setNote("로그인하면 계정에 저장돼요. 지금은 이 브라우저에만 저장돼요.");
+  renderAuth();
+  onAuthStateChanged(auth, async u => {
+    user = u; renderAuth();
+    if (u) {
+      try {
+        const snap = await getDoc(doc(db, "users", u.uid));
+        if (snap.exists()) applyData(snap.data()); else await doSave();
+        setNote("계정에 저장돼요. 다른 기기에서 로그인해도 볼 수 있어요.");
+      } catch (e) { setNote("불러오지 못했어요. 잠시 후 다시 시도해 주세요."); }
+    } else {
+      applyData(localLoad());
+      setNote("로그인하면 계정에 저장돼요. 지금은 이 브라우저에만 저장돼요.");
+    }
+  });
+}
+
+/* ---------- 이벤트 ---------- */
+$("addSubj").onclick = () => {
+  const s = mkSubject(); subjects.push(s); curId = s.id;
+  renderMain(); renderSide(); persist(); setNav(false);
+  $("subjName").focus(); $("subjName").select();
+};
+$("subjName").oninput = e => { cur().name = e.target.value; renderSide(); persist(); };
+$("target").oninput = e => { cur().target = e.target.value; update(); };
+$("addBtn").onclick = () => { cur().cards.push(mkCard()); renderCards(); update(); };
+$("lastW").oninput = e => { const l = cur().last; l.edited = true; l.w = e.target.value; update(); };
+$("lastType").querySelectorAll("button").forEach(b => b.onclick = () => {
+  const l = cur().last; l.type = b.dataset.t; l.edited = false; l.w = ""; update();
+});
+
+document.addEventListener("click", e => { if (popFor && !e.target.closest("#pop")) closePop(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closePop(); });
+addEventListener("resize", closePop);
+$("subjects").addEventListener("scroll", closePop);
+$("infoBtn").onclick = openInfo;
+$("infoClose").onclick = () => $("info").close();
+$("info").addEventListener("click", e => { if (e.target === $("info")) $("info").close(); });
+
+const setNav = open => {
+  closePop();
+  document.body.classList.toggle("nav-open", open);
+  $("menuBtn").setAttribute("aria-expanded", String(open));
+  $("menuBtn").setAttribute("aria-label", open ? "메뉴 닫기" : "메뉴 열기");
+};
+$("menuBtn").onclick = () => setNav(!document.body.classList.contains("nav-open"));
+$("backdrop").onclick = () => setNav(false);
+document.addEventListener("keydown", e => { if (e.key === "Escape") setNav(false); });
+matchMedia("(min-width:901px)").addEventListener("change", e => { if (e.matches) setNav(false); });
+
+initStore();
+</script>
+</body>
+</html>
