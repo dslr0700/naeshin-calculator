@@ -3,19 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>try{var t=localStorage.getItem("naesin-theme");if(t)document.documentElement.dataset.theme=t;if(localStorage.getItem("naesin-side")==="1")document.documentElement.classList.add("side-collapsed")}catch(e){}</script>
 <title>내신 계산기</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" id="themeColor" content="#f3f5f9">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="내신 계산기">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f3f5f9;--surface:#fff;--ink:#1c2740;--sub:#64708a;--line:#d9deea;--accent:#ffe14d;--accent-ink:#1c2740;--bad:#c4362c;--field:#f3f5f9;--sel:#e8ecf6;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root{--bg:#121826;--surface:#1b2336;--ink:#eef1f8;--sub:#98a3bd;--line:#2d3752;--bad:#ff8a80;--field:#121826;--sel:#273250}}
+:root[data-theme="dark"]{--bg:#121826;--surface:#1b2336;--ink:#eef1f8;--sub:#98a3bd;--line:#2d3752;--bad:#ff8a80;--field:#121826;--sel:#273250;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--bg:#121826;--surface:#1b2336;--ink:#eef1f8;--sub:#98a3bd;--line:#2d3752;--bad:#ff8a80;--field:#121826;--sel:#273250;color-scheme:dark}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.5}
 h1{font-size:24px;font-weight:900;margin:0 0 4px;letter-spacing:-.02em}
 h2{font-size:15px;font-weight:700;margin:0 0 10px}
 .lead{color:var(--sub);margin:0 0 20px;font-size:13px}
-.app{display:grid;grid-template-columns:312px minmax(0,1fr);min-height:100vh}
-.side{position:sticky;top:16px;margin:16px 0 16px 16px;height:calc(100vh - 32px);display:flex;flex-direction:column;padding:22px 14px 14px;background:var(--surface);border:1px solid var(--line);border-radius:28px;box-shadow:0 8px 30px rgba(20,30,60,.08)}
+.app{min-height:100vh}
+.side{position:fixed;top:16px;left:16px;bottom:16px;width:280px;z-index:40;display:flex;flex-direction:column;padding:22px 14px 14px;background:var(--surface);border:1px solid var(--line);border-radius:28px;box-shadow:0 8px 30px rgba(20,30,60,.08)}
 .sidehead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .sidehead h2{margin:0}
 .subjects{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;min-height:0}
@@ -33,7 +42,8 @@ h2{font-size:15px;font-weight:700;margin:0 0 10px}
 dialog{border:1px solid var(--line);border-radius:24px;padding:0;background:var(--surface);color:var(--ink);width:min(92vw,440px);max-height:86vh;box-shadow:0 20px 60px rgba(10,15,30,.3)}
 dialog::backdrop{background:rgba(10,15,30,.45)}
 .dlg{padding:18px 22px 24px;overflow:auto;max-height:86vh}
-.dhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.dhead{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px}
+.dact{display:flex;align-items:center;gap:8px;margin-left:auto}
 .dhead h2{margin:0;font-size:18px}
 .dlg h3{font-size:14px;margin:18px 0 6px}
 .dlg p,.dlg li{font-size:14px;margin:0 0 4px}
@@ -46,12 +56,12 @@ dialog::backdrop{background:rgba(10,15,30,.45)}
 .account .row{flex-wrap:nowrap}
 .avatar{flex:none;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-size:14px}
 .uname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
-main{padding:28px 32px 56px;max-width:1040px;width:100%}
+main{padding:20px 32px 56px;max-width:1040px;margin:0 auto}
 .head{display:flex;gap:12px;align-items:center;margin-bottom:20px}
 .title{flex:1;min-width:0;font-size:28px;font-weight:900;letter-spacing:-.02em;background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0;padding:4px 0}
 .title:hover,.title:focus{border-bottom-color:var(--line)}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
-.right{position:sticky;top:24px}
+.right{position:sticky;top:80px}
 section{margin-bottom:24px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -67,20 +77,31 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-of
 .add{width:100%;padding:12px;border:1.5px dashed var(--sub);background:transparent;color:var(--ink);border-radius:14px;font:inherit;font-weight:500;cursor:pointer}
 .err{color:var(--bad);font-size:12px;margin-top:6px}
 .sum{color:var(--sub);font-size:13px;margin:6px 2px}
-.result{background:var(--accent);color:var(--accent-ink);border-radius:18px;padding:22px}
+.result{background:var(--accent);color:var(--accent-ink);border-radius:18px;padding:22px;transition:background .2s}
+.result.done{background:#8fe3a8;color:#0d2b17}
+.result.bad{background:#ff8f85;color:#3a0b07}
+.result.idle{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
 .result .big{font-size:52px;font-weight:900;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
 .result .big small{font-size:20px;font-weight:700;margin-left:4px}
 .result p{margin:8px 0 0;font-size:14px}
 .btn{border:0;background:var(--ink);color:var(--surface);border-radius:10px;padding:9px 14px;font:inherit;font-weight:700;cursor:pointer;white-space:nowrap}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500;font-size:13px;padding:6px 12px}
-.topbar,.backdrop{display:none}
+.backdrop{display:none}
+.topbar{display:flex;align-items:center;gap:6px;position:sticky;top:0;z-index:20;background:var(--bg);padding:8px 14px;border-bottom:1px solid var(--line)}
+.topbar strong{display:none;font-size:17px;font-weight:900;letter-spacing:-.02em}
+.menu{width:42px;height:42px;display:grid;place-items:center;border:0;background:transparent;color:var(--ink);border-radius:12px;cursor:pointer;padding:0}
+.menu:hover,.menu:active{background:var(--sel)}
+@media (min-width:901px){
+  .app{padding-left:312px;transition:padding-left .25s ease}
+  .side{transition:transform .25s ease,visibility 0s}
+  .side-collapsed .app{padding-left:0}
+  .side-collapsed .side{transform:translateX(-110%);visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s}
+  .side-collapsed .topbar strong{display:block}
+}
 @media (max-width:900px){
-  .app{display:block}
-  .topbar{display:flex;align-items:center;gap:6px;position:sticky;top:0;z-index:20;background:var(--bg);padding:8px 10px;border-bottom:1px solid var(--line)}
-  .topbar strong{font-size:17px;font-weight:900;letter-spacing:-.02em}
-  .menu{width:42px;height:42px;display:grid;place-items:center;border:0;background:transparent;color:var(--ink);border-radius:12px;cursor:pointer}
-  .menu:active{background:var(--sel)}
-  .side{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin:0;z-index:40;width:min(86vw,320px);height:auto;padding:20px 14px 14px;border-radius:28px;transform:translateX(-110%);visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s}
+  .topbar{padding:8px 10px}
+  .topbar strong{display:block}
+  .side{top:calc(10px + env(safe-area-inset-top,0px));left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(86vw,320px);padding:20px 14px 14px;transform:translateX(-110%);visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s}
   .nav-open .side{transform:none;visibility:visible;transition:transform .25s ease,visibility 0s}
   .backdrop{display:block;position:fixed;inset:0;z-index:30;background:rgba(10,15,30,.45);opacity:0;pointer-events:none;transition:opacity .25s ease}
   .nav-open .backdrop{opacity:1;pointer-events:auto}
@@ -90,22 +111,51 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-of
   .right{position:static}
   .title{font-size:24px}
 }
-@media (prefers-reduced-motion:reduce){.side,.backdrop{transition:none!important}}
+@media (prefers-reduced-motion:reduce){.side,.backdrop,.app{transition:none!important}}
+select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.addbox{margin-bottom:10px}
+.sugg{margin-top:6px;border:1px solid var(--line);border-radius:14px;max-height:260px;overflow-y:auto}
+.sugg button{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);font:inherit;font-size:14px;padding:10px 12px;cursor:pointer}
+.sugg button span{color:var(--sub);font-size:12px}
+.sugg button[aria-selected="true"],.sugg button:hover{background:var(--sel)}
+.sugg .direct{border-top:1px solid var(--line);font-weight:700}
+.gcard h2,.pbox h2{margin:0 0 6px}
+.grow2{display:flex;justify-content:space-between;gap:8px;padding:7px 0;font-size:14px;border-bottom:1px solid var(--line)}
+.grow2:last-child{border-bottom:0}
+.grow2.cur{font-weight:900}
+.grow2 .bad{color:var(--bad)}
+.right .card{margin:12px 0 0}
+.sjrow.over{outline:2px dashed var(--sub);outline-offset:-2px;border-radius:16px}
+.cname{margin-top:10px}
+.lvrow{display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:center;margin-top:8px}
+.pop button:disabled{opacity:.4;cursor:default}
+#aboutLinks{display:flex;gap:10px;flex-wrap:wrap}
+.dlg a.clink{display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid var(--line);border-radius:50%;color:var(--ink)}
+.dlg a.clink:hover{background:var(--sel)}
 </style>
 </head>
 <body>
-<div class="topbar">
-  <button class="menu" id="menuBtn" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="side">
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h16M3 11h16M3 16h10"/></svg>
-  </button>
-  <strong>내신 계산기</strong>
-</div>
 <div class="backdrop" id="backdrop"></div>
 <div class="app">
+  <div class="topbar">
+    <button class="menu" id="menuBtn" type="button" aria-label="메뉴 닫기" aria-expanded="true" aria-controls="side">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h16M3 11h16M3 16h10"/></svg>
+    </button>
+    <strong>내신 계산기</strong>
+    <span style="flex:1"></span>
+    <button class="menu" id="themeBtn" type="button" aria-label="다크 모드로 전환"></button>
+  </div>
   <aside class="side" id="side">
     <h1>내신 계산기</h1>
-    <p class="lead">지금까지의 성적으로 목표 점수에 필요한 마지막 시험 점수를 계산해요.</p>
-    <div class="sidehead"><h2>과목</h2><button class="icon" id="addSubj" type="button" aria-label="과목 추가">+</button></div>
+    <p class="lead">지금까지의 성적으로 목표 점수에 필요한 마지막 시험 점수를 계산</p>
+    <div class="sidehead"><h2>과목</h2><button class="icon" id="addSubj" type="button" aria-label="과목 추가" aria-expanded="false">+</button></div>
+    <div class="addbox" id="addBox" hidden>
+      <input id="addInput" type="text" maxlength="20" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="sugg" aria-label="과목 이름 입력" placeholder="과목 이름 (예: 국어, ㄱㅇ)">
+      <div class="sugg" id="sugg" role="listbox"></div>
+    </div>
     <div class="subjects" id="subjects"></div>
     <div class="account">
       <p class="sum" id="storeNote"></p>
@@ -119,6 +169,7 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-of
   <main>
     <div class="head">
       <input class="title" id="subjName" type="text" placeholder="과목명" maxlength="20" aria-label="과목명">
+      <button class="btn ghost" id="lvEdit" type="button">성취도 기준</button>
     </div>
     <div class="grid">
       <div>
@@ -130,7 +181,7 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-of
         </section>
         <section>
           <h2>목표 점수</h2>
-          <div class="card"><label for="target">100점 만점 기준</label><input id="target" type="number" inputmode="decimal" min="0" max="100"></div>
+          <div class="card"><label for="target">100점 만점 기준</label><input id="target" type="number" inputmode="decimal" min="0" max="100"><div class="chips" id="chips"></div></div>
         </section>
         <section>
           <h2>남은 마지막 시험</h2>
@@ -140,28 +191,44 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-of
               <button type="button" data-t="perf">수행평가</button>
             </div>
             <div style="margin-top:12px"><label for="lastW" id="lastWLabel">반영 비율 (%)</label><input id="lastW" type="number" inputmode="decimal" min="0"></div>
+            <div style="margin-top:12px"><label for="pred">예상 점수 (선택)</label><input id="pred" type="number" inputmode="decimal" min="0" placeholder="미리 넣어 보기"></div>
           </div>
         </section>
       </div>
-      <div class="right"><div class="result" id="result" aria-live="polite"></div></div>
+      <div class="right"><div class="result" id="result" aria-live="polite"></div><div class="card gcard" id="grades"></div><div class="card pbox" id="predBox" hidden></div></div>
     </div>
   </main>
 </div>
 
+<dialog id="lvDlg" aria-labelledby="lvTitle">
+  <div class="dlg">
+    <div class="dhead"><h2 id="lvTitle">성취도 기준 편집</h2><button class="icon" id="lvClose" type="button" aria-label="닫기">×</button></div>
+    <p>각 등급의 최소 점수를 입력합니다. 마지막 등급은 나머지 점수입니다.</p>
+    <label for="lvN" style="margin-top:12px">단계 수</label>
+    <select id="lvN"><option value="2">2단계</option><option value="3">3단계</option><option value="4">4단계</option><option value="5">5단계</option></select>
+    <div id="lvRows"></div>
+    <div class="err" id="lvErr" hidden></div>
+    <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn ghost" id="lvCancel" type="button">취소</button><button class="btn" id="lvSave" type="button">저장</button></div>
+  </div>
+</dialog>
+
 <dialog id="info" aria-labelledby="infoTitle">
   <div class="dlg">
-    <div class="dhead"><h2 id="infoTitle">내신 계산기 안내</h2><button class="icon" id="infoClose" type="button" aria-label="닫기">×</button></div>
-    <h3>이 사이트는</h3>
-    <p>지금까지의 시험 성적으로, 목표 점수를 채우려면 마지막 시험에서 몇 점이 필요한지 계산해 줘요. 과목별로 따로 저장돼요.</p>
+    <div class="dhead"><h2 id="infoTitle">내신 계산기 안내</h2><button class="icon" id="infoClose" type="button" aria-label="닫기" autofocus>×</button></div>
+    <h3>사이트 정보</h3>
+    <p>지금까지의 시험 성적으로 목표 점수를 채우려면 마지막 시험에서 몇 점이 필요한지 계산합니다. 과목별로 따로 저장할 수 있습니다.</p>
     <h3>사용 방법</h3>
     <ol>
-      <li>사이드바의 + 로 과목을 추가해요. 과목 오른쪽 ⋮ 메뉴에서 이름을 바꾸거나 삭제할 수 있어요.</li>
-      <li>지금까지 본 시험을 카드로 추가해요. 정기고사는 100점 만점 점수와 반영 비율, 수행평가는 점수와 만점을 입력해요.</li>
-      <li>목표 점수를 입력해요. 기본값은 90점이에요.</li>
-      <li>남은 마지막 시험의 종류를 고르면 필요한 점수가 노란 카드에 표시돼요. 반영 비율은 남은 비율로 자동 채워져요.</li>
-      <li>입력한 내용은 자동으로 저장돼요. Google로 로그인하면 다른 기기에서도 볼 수 있어요.</li>
+      <li>사이드바의 + 를 누르고 과목 이름을 입력해 추가하십시오. 예시 과목을 고르면 성취도 기준이 함께 적용됩니다. 과목 오른쪽 ⋮ 메뉴에서 이름 변경, 성취도 기준 편집, 순서 이동, 삭제를 할 수 있습니다.</li>
+      <li>지금까지 본 시험을 카드로 추가하십시오. 정기고사는 100점 만점 점수와 반영 비율, 수행평가는 점수와 만점을 입력하십시오.</li>
+      <li>목표 점수를 입력하십시오. 기본값은 90점입니다.</li>
+      <li>남은 마지막 시험의 종류를 고르면 필요한 점수가 노란 카드에 표시됩니다. 반영 비율은 남은 비율로 자동 입력됩니다.</li>
+      <li>마지막 시험의 예상 점수를 입력하면 최종 점수와 성취도를 미리 확인할 수 있습니다.</li>
+      <li>입력한 내용은 현재 브라우저에 자동으로 저장됩니다. Google로 로그인하면 다른 기기에서도 볼 수 있습니다.</li>
     </ol>
-    <div id="aboutBox"><h3>만든 사람</h3><div id="aboutLinks"></div></div>
+    <h3>안내</h3>
+    <p>이 창을 닫은 후에도 왼쪽 패널의 (i) 버튼으로 다시 확인하실 수 있습니다.</p>
+    <div id="aboutBox"><h3>제작자/오류 제보</h3><div id="aboutLinks"></div></div>
   </div>
 </dialog>
 
@@ -170,7 +237,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-// Firebase 콘솔의 웹 앱 설정 값으로 바꿔 넣어 주세요.
+// Firebase 콘솔의 웹 앱 설정 값으로 바꿔 넣어 주십시오.
 const firebaseConfig = {
     apiKey: "AIzaSyCMf7Z0tfztyKaH7BXaOkBCoHaoueyWHQo",
     authDomain: "naeshin-calculator.firebaseapp.com",
@@ -181,9 +248,9 @@ const firebaseConfig = {
     measurementId: "G-2BWRSP7P9R"
   };
 
-// 정보창(i 버튼)에 보일 연락처입니다. 비워 두면 해당 항목은 숨겨져요.
+// 정보창(i 버튼)에 보일 연락처입니다. 비워 두면 해당 항목은 숨겨집니다.
 const ABOUT = {
-  github: "https://github.com/stophoon2012-sys",   // 예: "https://github.com/내아이디"
+  github: "https://github.com/dslr0700",   // 예: "https://github.com/내아이디"
   email: "dslr0700@gmail.com"     // 예: "me@example.com"
 };
 
@@ -191,12 +258,30 @@ const $ = id => document.getElementById(id);
 const num = v => (v === "" || v == null || isNaN(+v)) ? null : +v;
 const fmt = n => (Math.round(n * 100) / 100).toString();
 const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-const mkCard = () => ({ id: rid(), type: "exam", score: "", w: "" });
-const mkSubject = () => ({ id: rid(), name: "새 과목", target: "90", cards: [mkCard()], last: { type: "exam", w: "", edited: false } });
+// ── 성취도 기준 / 예시 과목 (여기서 직접 수정할 수 있습니다) ──
+const GRADES = ["A", "B", "C", "D", "E"];
+const LEVELS = {          // 단계 수 → 등급별 최소 점수 (마지막은 나머지이므로 0)
+  5: [90, 80, 70, 60, 0],
+  4: [90, 80, 60, 0],
+  3: [80, 60, 0],
+  2: [60, 0]
+};
+const PRESETS = [         // n: 과목명, l: 적용할 단계 수
+  { n: "국어", l: 5 }, { n: "영어", l: 5 }, { n: "수학", l: 5 }, { n: "사회", l: 5 },
+  { n: "역사", l: 5 }, { n: "도덕", l: 5 }, { n: "과학", l: 5 }, { n: "기술·가정", l: 5 },
+  { n: "정보", l: 5 }, { n: "한문", l: 5 }, { n: "제2외국어(이름 커스텀 가능)", l: 5 }, { n: "체육", l: 3 }, { n: "음악", l: 3 }, { n: "미술", l: 3 }
+];
+const mkLevels = n => LEVELS[n].map((min, i) => ({ g: GRADES[i], min }));
+const normLevels = a => (Array.isArray(a) && a.length >= 2 && a.length <= 5 && a.every(x => x && Number.isFinite(+x.min)))
+  ? a.map((x, i) => ({ g: GRADES[i], min: i === a.length - 1 ? 0 : +x.min })) : mkLevels(5);
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const mkCard = () => ({ id: rid(), type: "exam", name: "", score: "", w: "" });
+const mkSubject = (name = "새 과목", n = 5) => ({ id: rid(), name, target: String(LEVELS[n][0]), cards: [mkCard()], last: { type: "exam", w: "", edited: false }, levels: mkLevels(n), predict: "" });
 const norm = s => ({
   id: s.id || rid(), name: s.name || "새 과목", target: String(s.target ?? "90"),
-  cards: (s.cards && s.cards.length ? s.cards : [mkCard()]).map(c => ({ id: c.id || rid(), type: c.type === "perf" ? "perf" : "exam", score: c.score ?? "", w: c.w ?? "" })),
-  last: { type: s.last?.type === "perf" ? "perf" : "exam", w: s.last?.w ?? "", edited: !!s.last?.edited }
+  cards: (s.cards && s.cards.length ? s.cards : [mkCard()]).map(c => ({ id: c.id || rid(), type: c.type === "perf" ? "perf" : "exam", score: c.score ?? "", w: c.w ?? "", name: String(c.name ?? "") })),
+  last: { type: s.last?.type === "perf" ? "perf" : "exam", w: s.last?.w ?? "", edited: !!s.last?.edited },
+  levels: normLevels(s.levels), predict: String(s.predict ?? "")
 });
 
 let subjects = [], curId = null, user = null, db = null, auth = null, timer = null;
@@ -209,9 +294,9 @@ function calc(sub){
   let got = 0, used = 0; const errs = new Map();
   sub.cards.forEach(c => {
     const s = num(c.score), w = num(c.w);
-    if (s != null && s < 0) errs.set(c.id, "점수는 0 이상이어야 해요.");
-    else if (c.type === "exam" && s != null && s > 100) errs.set(c.id, "정기고사 점수는 100점을 넘을 수 없어요.");
-    else if (c.type === "perf" && s != null && w != null && s > w) errs.set(c.id, "점수가 만점보다 커요.");
+    if (s != null && s < 0) errs.set(c.id, "점수는 0 이상이어야 합니다.");
+    else if (c.type === "exam" && s != null && s > 100) errs.set(c.id, "정기고사 점수는 100점을 넘을 수 없습니다.");
+    else if (c.type === "perf" && s != null && w != null && s > w) errs.set(c.id, "점수가 만점보다 큽니다.");
     if (s != null && w != null) { got += c.type === "exam" ? s * w / 100 : s; used += w; }
   });
   const target = num(sub.target);
@@ -230,28 +315,39 @@ const up = n => fmt(Math.ceil(n * 100) / 100);
 function resultHTML(sub, r){
   const exam = sub.last.type === "exam";
   switch (r.kind) {
-    case "invalid": return `<p>입력한 점수를 먼저 확인해 주세요.</p>`;
-    case "notarget": return `<p>목표 점수를 입력해 주세요.</p>`;
-    case "noweight": return `<p>${exam ? "마지막 시험의 반영 비율" : "마지막 수행평가의 만점"}을 입력해 주세요.</p>`;
-    case "done": return `<div class="big">0<small>점 이상</small></div><p>이미 목표 점수를 달성했어요.</p>`;
-    case "impossible": return `<div class="big">${up(r.req)}<small>점 필요</small></div><p>${exam ? "100점 만점" : fmt(r.max) + "점 만점"}이라 목표 달성이 어려워요. 마지막 시험을 만점 받아도 ${fmt(r.got + (exam ? r.w : r.max))}점이에요.</p>`;
-    default: return `<div class="big">${up(r.req)}<small>점 이상</small></div><p>${exam ? `정기고사(반영 ${fmt(r.w)}%) 100점 만점 기준` : `수행평가 ${fmt(r.max)}점 만점 기준`}으로 이 점수를 받으면 ${fmt(r.target)}점을 채울 수 있어요.</p>`;
+    case "invalid": return `<p>입력한 점수를 먼저 확인해 주십시오.</p>`;
+    case "notarget": return `<p>목표 점수를 입력해 주십시오.</p>`;
+    case "noweight": return `<p>${exam ? "마지막 시험의 반영 비율" : "마지막 수행평가의 만점"}을 입력해 주십시오.</p>`;
+    case "done": return `<div class="big">0<small>점 이상</small></div><p>이미 목표 점수를 달성했습니다.</p>`;
+    case "impossible": return `<div class="big">불가능</div><p>${exam ? "100점 만점" : fmt(r.max) + "점 만점"}이라 목표 달성이 불가능합니다. 마지막 시험을 만점 받아도 ${fmt(r.got + (exam ? r.w : r.max))}점입니다.</p>`;
+    default: return `<div class="big">${up(r.req)}<small>점 이상</small></div><p>${exam ? `정기고사(반영 ${fmt(r.w)}%) 100점 만점 기준` : `수행평가 ${fmt(r.max)}점 만점 기준`}으로 이 점수를 받으면 ${fmt(r.target)}점을 채울 수 있습니다.</p>`;
   }
 }
 
 /* ---------- 렌더링 ---------- */
-let renamingId = null, popFor = null;
+let renamingId = null, popFor = null, dragId = null;
 function renderSide(){
   const box = $("subjects"); box.innerHTML = "";
   subjects.forEach(s => {
     const r = calc(s), renaming = s.id === renamingId;
     const row = document.createElement("div"); row.className = "sjrow";
+    row.draggable = !renaming;
+    row.ondragstart = e => { dragId = s.id; e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", s.id); } catch (x) {} };
+    row.ondragover = e => { if (dragId && dragId !== s.id) { e.preventDefault(); row.classList.add("over"); } };
+    row.ondragleave = () => row.classList.remove("over");
+    row.ondrop = e => {
+      e.preventDefault(); row.classList.remove("over");
+      if (!dragId || dragId === s.id) return;
+      const from = subjects.findIndex(x => x.id === dragId), to = subjects.findIndex(x => x.id === s.id);
+      const [m] = subjects.splice(from, 1); subjects.splice(to, 0, m); dragId = null; renderSide(); persist();
+    };
+    row.ondragend = () => { dragId = null; box.querySelectorAll(".over").forEach(el => el.classList.remove("over")); };
     const main = document.createElement(renaming ? "div" : "button");
     if (!renaming) main.type = "button";
     main.className = "sj";
     if (s.id === curId) main.setAttribute("aria-current", "true");
     const st = document.createElement("span");
-    st.textContent = r.kind === "ok" ? `${up(r.req)}점 이상` : r.kind === "done" ? "달성 완료" : r.kind === "impossible" ? "달성 어려움" : "입력 중";
+    st.textContent = r.kind === "ok" ? `${up(r.req)}점 이상` : r.kind === "done" ? "달성 완료" : r.kind === "impossible" ? "불가능" : "입력 중";
     if (renaming) {
       const inp = document.createElement("input");
       inp.className = "rename"; inp.value = s.name; inp.maxLength = 20; inp.setAttribute("aria-label", "과목 이름");
@@ -290,7 +386,7 @@ function commitRename(id, val){
 
 function deleteSubject(id){
   const s = subjects.find(x => x.id === id); if (!s) return;
-  if (!confirm(`“${s.name || "이름 없음"}” 과목을 삭제할까요?`)) return;
+  if (!confirm(`“${s.name || "이름 없음"}” 과목을 삭제하시겠습니까?`)) return;
   subjects = subjects.filter(x => x.id !== id);
   if (!subjects.length) subjects = [mkSubject()];
   if (!subjects.some(x => x.id === curId)) curId = subjects[0].id;
@@ -311,7 +407,13 @@ function openPop(id, anchor){
     b.onclick = () => { closePop(); fn(); };
     return b;
   };
-  p.append(mk("이름 바꾸기", "", () => { renamingId = id; renderSide(); }), mk("삭제", "danger", () => deleteSubject(id)));
+  const idx = subjects.findIndex(x => x.id === id);
+  const mv = d => () => { const j = idx + d; if (j < 0 || j >= subjects.length) return; const [m] = subjects.splice(idx, 1); subjects.splice(j, 0, m); renderSide(); persist(); };
+  const mvUp = mk("위로 이동", "", mv(-1)), mvDn = mk("아래로 이동", "", mv(1));
+  mvUp.disabled = idx === 0; mvDn.disabled = idx === subjects.length - 1;
+  p.append(mk("이름 바꾸기", "", () => { renamingId = id; renderSide(); }),
+           mk("성취도 기준 편집", "", () => { curId = id; renderMain(); renderSide(); openLv(); }),
+           mvUp, mvDn, mk("삭제", "danger", () => deleteSubject(id)));
   document.body.appendChild(p);
   const r = anchor.getBoundingClientRect(), w = p.offsetWidth, h = p.offsetHeight;
   const left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8));
@@ -320,19 +422,18 @@ function openPop(id, anchor){
   p.querySelector("button").focus();
 }
 
+const ICON_GH = '<svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>';
+const ICON_MAIL = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
 function openInfo(){
   const box = $("aboutLinks"); box.innerHTML = "";
-  if (ABOUT.github) {
+  const mk = (href, svg, label, ext) => {
     const a = document.createElement("a");
-    a.href = ABOUT.github; a.target = "_blank"; a.rel = "noopener noreferrer";
-    a.textContent = "GitHub · " + ABOUT.github.replace(/^https?:\/\//, "");
-    box.append(a);
-  }
-  if (ABOUT.email) {
-    const a = document.createElement("a");
-    a.href = "mailto:" + ABOUT.email; a.textContent = "이메일 · " + ABOUT.email;
-    box.append(a);
-  }
+    a.className = "clink"; a.href = href; a.title = label; a.setAttribute("aria-label", label);
+    if (ext) { a.target = "_blank"; a.rel = "noopener noreferrer"; }
+    a.innerHTML = svg; return a;
+  };
+  if (ABOUT.github) box.append(mk(ABOUT.github, ICON_GH, "GitHub", true));
+  if (ABOUT.email) box.append(mk("mailto:" + ABOUT.email, ICON_MAIL, "이메일: " + ABOUT.email, false));
   $("aboutBox").hidden = !box.children.length;
   $("info").showModal();
 }
@@ -349,6 +450,7 @@ function renderCards(){
         </div>
         <button type="button" class="icon" aria-label="시험 ${i + 1} 삭제">−</button>
       </div>
+      <input class="cname" data-k="name" type="text" maxlength="20" aria-label="시험 이름" placeholder="시험 이름 (예: 1학기 중간)" value="${esc(c.name)}">
       <div class="fields">
         <div><label>점수${c.type === "exam" ? " (100점 만점)" : ""}</label><input data-k="score" type="number" inputmode="decimal" min="0" value="${c.score}"></div>
         <div><label>${c.type === "exam" ? "반영 비율 (%)" : "만점"}</label><input data-k="w" type="number" inputmode="decimal" min="0" value="${c.w}"></div>
@@ -366,6 +468,7 @@ function renderMain(){
   $("subjName").value = sub.name;
   $("target").value = sub.target;
   $("lastW").value = sub.last.w;
+  $("pred").value = sub.predict;
   renderCards();
   update(false);
 }
@@ -382,8 +485,40 @@ function update(save = true){
   if (!sub.last.edited) $("lastW").value = r.w != null ? fmt(r.w) : "";
   $("sum").textContent = `현재 획득 ${fmt(r.got)}점 · 반영된 비율 ${fmt(r.used)}점 분량`;
   $("result").innerHTML = resultHTML(sub, r);
+  $("result").className = "result" + ({ ok: "", done: " done", impossible: " bad" }[r.kind] ?? " idle");
+  renderLevels(sub, r);
   renderSide();
   if (save) persist();
+}
+
+function reqFor(sub, r, t){
+  if (r.w == null || r.w <= 0 || r.errs.size) return null;
+  const need = t - r.got, exam = sub.last.type === "exam";
+  const req = exam ? need * 100 / r.w : need, max = exam ? 100 : r.w;
+  return need <= 0 ? { kind: "done" } : req > max ? { kind: "impossible" } : { kind: "ok", req };
+}
+
+function renderLevels(sub, r){
+  const L = sub.levels, t = num(sub.target), top = L.filter(x => x.min > 0);
+  const chips = $("chips"); chips.innerHTML = "";
+  top.forEach(x => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "chip";
+    b.textContent = `${x.g} ${x.min}`; b.setAttribute("aria-pressed", String(t === x.min));
+    b.onclick = () => { sub.target = String(x.min); $("target").value = sub.target; update(); };
+    chips.append(b);
+  });
+  $("grades").innerHTML = "<h2>등급별 필요 점수</h2>" + top.map(x => {
+    const q = reqFor(sub, r, x.min);
+    const v = !q ? "-" : q.kind === "done" ? "달성" : q.kind === "impossible" ? "불가능" : `${up(q.req)}점`;
+    return `<div class="grow2${t === x.min ? " cur" : ""}"><span>${x.g} · ${x.min}점 이상</span><span class="${q && q.kind === "impossible" ? "bad" : ""}">${v}</span></div>`;
+  }).join("");
+  const p = num(sub.predict), pb = $("predBox"), exam = sub.last.type === "exam", max = exam ? 100 : r.w;
+  if (p == null || r.w == null || r.w <= 0 || r.errs.size) { pb.hidden = true; return; }
+  pb.hidden = false;
+  if (p < 0 || p > max) { pb.innerHTML = `<div class="err" style="margin:0">예상 점수는 0~${fmt(max)}점 사이여야 합니다.</div>`; return; }
+  const fin = r.got + (exam ? p * r.w / 100 : p), g = (L.find(x => fin >= x.min) || L[L.length - 1]).g;
+  pb.innerHTML = `<h2>예상 결과</h2><div class="grow2"><span>예상 최종 점수</span><b>${fmt(fin)}점</b></div><div class="grow2"><span>성취도</span><b>${g}</b></div>` +
+    (t != null ? `<div class="grow2"><span>목표 ${fmt(t)}점</span><b>${fin >= t ? "달성" : "미달"}</b></div>` : "");
 }
 
 /* ---------- 저장 ---------- */
@@ -392,7 +527,7 @@ async function doSave(){
   const data = JSON.parse(JSON.stringify({ subjects, curId }));
   if (user && db) {
     try { await setDoc(doc(db, "users", user.uid), data); }
-    catch (e) { setNote("저장하지 못했어요. 로그인 상태와 네트워크를 확인해 주세요."); }
+    catch (e) { setNote("저장하지 못했습니다. 로그인 상태와 네트워크를 확인해 주십시오."); }
   } else { try { localStorage.setItem("naesin-v2", JSON.stringify(data)); } catch (e) {} }
 }
 function localLoad(){
@@ -418,17 +553,17 @@ function renderAuth(){
   } else {
     const inn = document.createElement("button"); inn.type = "button"; inn.className = "btn"; inn.textContent = "Google로 로그인";
     inn.style.flex = "1";
-    inn.onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).catch(() => setNote("로그인하지 못했어요. 팝업 차단을 풀고 다시 시도해 주세요."));
+    inn.onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).catch(() => setNote("로그인에 실패했습니다. 팝업 차단을 해제하고 다시 시도해 주십시오."));
     box.append(inn);
   }
 }
 
 async function initStore(){
   applyData(localLoad());
-  if (!configured) { setNote("Firebase 설정 전이라 이 브라우저에만 저장돼요."); return; }
+  if (!configured) { setNote("Firebase가 설정되지 않았습니다. 사이트 운영자에게 문의해주십시오."); return; }
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app); db = getFirestore(app);
-  setNote("로그인하면 계정에 저장돼요. 지금은 이 브라우저에만 저장돼요.");
+  setNote("로그인하면 계정에 저장됩니다. 지금은 이 브라우저에만 저장됩니다.");
   renderAuth();
   onAuthStateChanged(auth, async u => {
     user = u; renderAuth();
@@ -436,21 +571,87 @@ async function initStore(){
       try {
         const snap = await getDoc(doc(db, "users", u.uid));
         if (snap.exists()) applyData(snap.data()); else await doSave();
-        setNote("계정에 저장돼요. 다른 기기에서 로그인해도 볼 수 있어요.");
-      } catch (e) { setNote("불러오지 못했어요. 잠시 후 다시 시도해 주세요."); }
+        setNote("계정에 저장되었습니다. 다른 기기에서 로그인해도 볼 수 있습니다.");
+      } catch (e) { setNote("불러오지 못했습니다. 잠시 후 다시 시도해 주십시오."); }
     } else {
       applyData(localLoad());
-      setNote("로그인하면 계정에 저장돼요. 지금은 이 브라우저에만 저장돼요.");
+      setNote("로그인하면 계정에 저장됩니다. 지금은 이 브라우저에만 저장됩니다.");
     }
   });
 }
 
 /* ---------- 이벤트 ---------- */
+const CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
+const cho = t => [...t].map(ch => { const c = ch.charCodeAt(0) - 0xAC00; return c >= 0 && c <= 11171 ? CHO[Math.floor(c / 588)] : ch; }).join("");
+let suggItems = [], suggIdx = 0;
+function renderSugg(){
+  const q = $("addInput").value.trim(), jamo = /^[ㄱ-ㅎ]+$/.test(q);
+  const hit = p => p.n.includes(q) || (jamo && cho(p.n).includes(q));
+  const first = p => p.n.startsWith(q) || (jamo && cho(p.n).startsWith(q));
+  suggItems = PRESETS.filter(p => !q || hit(p)).sort((a, b) => q ? Number(first(b)) - Number(first(a)) : 0);
+  if (q && !PRESETS.some(p => p.n === q)) suggItems.push({ n: q, l: 5, direct: true });
+  suggIdx = Math.max(0, Math.min(suggIdx, suggItems.length - 1));
+  const box = $("sugg"); box.innerHTML = "";
+  suggItems.forEach((it, i) => {
+    const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "option");
+    b.setAttribute("aria-selected", String(i === suggIdx)); if (it.direct) b.className = "direct";
+    b.append(document.createTextNode(it.direct ? `‘${it.n}’ 직접 추가하기` : it.n));
+    if (!it.direct) { const sp = document.createElement("span"); sp.textContent = `${it.l}단계`; b.append(sp); }
+    b.onmousedown = e => e.preventDefault();
+    b.onclick = () => chooseSugg(i);
+    box.append(b);
+  });
+}
+function closeAdd(){ $("addBox").hidden = true; $("addSubj").setAttribute("aria-expanded", "false"); }
+function chooseSugg(i){
+  const it = suggItems[i]; if (!it) return;
+  const s = mkSubject(it.n, it.l); subjects.push(s); curId = s.id;
+  closeAdd(); renderMain(); renderSide(); persist(); setNav(false);
+}
 $("addSubj").onclick = () => {
-  const s = mkSubject(); subjects.push(s); curId = s.id;
-  renderMain(); renderSide(); persist(); setNav(false);
-  $("subjName").focus(); $("subjName").select();
+  if (!$("addBox").hidden) return closeAdd();
+  $("addBox").hidden = false; $("addSubj").setAttribute("aria-expanded", "true");
+  $("addInput").value = ""; suggIdx = 0; renderSugg(); $("addInput").focus();
 };
+$("addInput").oninput = () => { suggIdx = 0; renderSugg(); };
+$("addInput").onkeydown = e => {
+  if (e.isComposing) return;
+  const n = suggItems.length;
+  if (e.key === "ArrowDown" && n) { e.preventDefault(); suggIdx = (suggIdx + 1) % n; renderSugg(); }
+  else if (e.key === "ArrowUp" && n) { e.preventDefault(); suggIdx = (suggIdx - 1 + n) % n; renderSugg(); }
+  else if (e.key === "Enter") { e.preventDefault(); chooseSugg(suggIdx); }
+  else if (e.key === "Escape") { e.stopPropagation(); closeAdd(); $("addSubj").focus(); }
+};
+
+let lvDraft = [];
+function drawLv(){
+  const box = $("lvRows"); box.innerHTML = "";
+  lvDraft.forEach((min, i) => {
+    const last = i === lvDraft.length - 1, row = document.createElement("div"); row.className = "lvrow";
+    const g = document.createElement("b"); g.textContent = GRADES[i];
+    const inp = document.createElement("input"); inp.type = "number"; inp.inputMode = "decimal"; inp.min = 0; inp.max = 100;
+    inp.setAttribute("aria-label", `${GRADES[i]} 최소 점수`);
+    if (last) { inp.disabled = true; inp.placeholder = "나머지"; }
+    else { inp.value = min; inp.oninput = () => { lvDraft[i] = inp.value === "" ? NaN : +inp.value; }; }
+    row.append(g, inp); box.append(row);
+  });
+}
+function openLv(){
+  lvDraft = cur().levels.map(x => x.min); $("lvN").value = String(lvDraft.length);
+  drawLv(); $("lvErr").hidden = true; $("lvDlg").showModal();
+}
+$("lvN").onchange = () => { lvDraft = LEVELS[+$("lvN").value].slice(); drawLv(); };
+$("lvSave").onclick = () => {
+  const m = lvDraft.slice(0, -1);
+  const ok = m.every(v => Number.isFinite(v) && v > 0 && v <= 100) && m.every((v, i) => i === 0 || v < m[i - 1]);
+  if (!ok) { $("lvErr").textContent = "각 등급의 최소 점수는 0보다 크고 100 이하여야 하며, 위 등급일수록 커야 합니다."; $("lvErr").hidden = false; return; }
+  cur().levels = [...m, 0].map((min, i) => ({ g: GRADES[i], min }));
+  $("lvDlg").close(); renderMain(); renderSide(); persist();
+};
+$("lvCancel").onclick = $("lvClose").onclick = () => $("lvDlg").close();
+$("lvDlg").addEventListener("click", e => { if (e.target === $("lvDlg")) $("lvDlg").close(); });
+$("lvEdit").onclick = openLv;
+$("pred").oninput = e => { cur().predict = e.target.value; update(); };
 $("subjName").oninput = e => { cur().name = e.target.value; renderSide(); persist(); };
 $("target").oninput = e => { cur().target = e.target.value; update(); };
 $("addBtn").onclick = () => { cur().cards.push(mkCard()); renderCards(); update(); };
@@ -465,20 +666,63 @@ addEventListener("resize", closePop);
 $("subjects").addEventListener("scroll", closePop);
 $("infoBtn").onclick = openInfo;
 $("infoClose").onclick = () => $("info").close();
+const INFO_KEY = "naesin-info-seen";
 $("info").addEventListener("click", e => { if (e.target === $("info")) $("info").close(); });
 
-const setNav = open => {
-  closePop();
-  document.body.classList.toggle("nav-open", open);
+const mq = matchMedia("(max-width:900px)");
+const root = document.documentElement;
+function syncMenu(){
+  const open = mq.matches ? document.body.classList.contains("nav-open") : !root.classList.contains("side-collapsed");
   $("menuBtn").setAttribute("aria-expanded", String(open));
   $("menuBtn").setAttribute("aria-label", open ? "메뉴 닫기" : "메뉴 열기");
+}
+// 모바일에서만 서랍(드로어)을 닫습니다. 데스크탑에서는 패널 상태를 바꾸지 않습니다.
+const setNav = open => {
+  closePop();
+  document.body.classList.toggle("nav-open", open && mq.matches);
+  syncMenu();
 };
-$("menuBtn").onclick = () => setNav(!document.body.classList.contains("nav-open"));
+$("menuBtn").onclick = () => {
+  closePop();
+  if (mq.matches) setNav(!document.body.classList.contains("nav-open"));
+  else {
+    const collapsed = root.classList.toggle("side-collapsed");
+    try { localStorage.setItem("naesin-side", collapsed ? "1" : "0"); } catch (e) {}
+    syncMenu();
+  }
+};
 $("backdrop").onclick = () => setNav(false);
 document.addEventListener("keydown", e => { if (e.key === "Escape") setNav(false); });
-matchMedia("(min-width:901px)").addEventListener("change", e => { if (e.matches) setNav(false); });
+mq.addEventListener("change", () => setNav(false));
+syncMenu();
+
+const SUN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+const darkMq = matchMedia("(prefers-color-scheme:dark)");
+function applyTheme(t, save){
+  root.dataset.theme = t;
+  $("themeColor").content = t === "dark" ? "#121826" : "#f3f5f9";
+  $("themeBtn").innerHTML = t === "dark" ? SUN : MOON;
+  $("themeBtn").setAttribute("aria-label", t === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환");
+  if (save) { try { localStorage.setItem("naesin-theme", t); } catch (e) {} }
+}
+let savedTheme = null;
+try { savedTheme = localStorage.getItem("naesin-theme"); } catch (e) {}
+applyTheme(savedTheme || (darkMq.matches ? "dark" : "light"), false);
+$("themeBtn").onclick = () => applyTheme(root.dataset.theme === "dark" ? "light" : "dark", true);
+darkMq.addEventListener("change", e => {
+  try { if (localStorage.getItem("naesin-theme")) return; } catch (x) {}
+  applyTheme(e.matches ? "dark" : "light", false);
+});
+
+if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 
 initStore();
+
+// 처음 접속했을 때 한 번만 안내창을 자동으로 보여 줍니다. (닫으면 다음부터는 (i) 버튼으로만 열립니다.)
+let seen = false;
+try { seen = localStorage.getItem(INFO_KEY) === "1"; localStorage.setItem(INFO_KEY, "1"); } catch (e) { seen = true; }
+if (!seen) openInfo();
 </script>
 </body>
 </html>
